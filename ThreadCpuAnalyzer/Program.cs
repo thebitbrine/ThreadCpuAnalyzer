@@ -10,7 +10,7 @@ using ThreadState = System.Threading.ThreadState;
 
 namespace ThreadCpuAnalyzer
 {
-    internal class ThreadCpuAnalyzer
+    public static class ThreadCpuAnalyzer
     {
 
         private static ConcurrentDictionary<long, Thread> Threads = new ConcurrentDictionary<long, Thread>();
@@ -265,11 +265,15 @@ namespace ThreadCpuAnalyzer
         {
             Threads.TryRemove(ThreadId, out _);
         }
+        public static Thread AddStartThread(Thread _thread, string Name = "")
+        {
+            return AddStartThread(ref _thread, Name, true);
+        }
 
-        public static Thread AddStartThread(ref Thread _thread, string Name = "")
+        public static Thread AddStartThread(ref Thread _thread, string Name = "", bool IsBypass = false)
         {
             StackTrace stackTrace = new StackTrace();
-            StackFrame stackFrame = stackTrace.GetFrame(1);
+            StackFrame stackFrame = stackTrace.GetFrame(IsBypass ?  2 : 1);
 
             var method = stackFrame.GetMethod();
             var declaringType = method.DeclaringType;
