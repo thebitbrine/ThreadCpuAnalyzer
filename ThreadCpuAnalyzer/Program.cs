@@ -272,52 +272,57 @@ namespace ThreadCpuAnalyzer
 
         public static Thread AddStartThread(ref Thread _thread, string Name = "", bool IsBypass = false)
         {
-            StackTrace stackTrace = new StackTrace();
-            StackFrame stackFrame = stackTrace.GetFrame(IsBypass ?  2 : 1);
-
-            var method = stackFrame.GetMethod();
-            var declaringType = method.DeclaringType;
-            var methodName = method.Name;
-            var namespaceName = declaringType.Namespace;
-            int line = stackFrame.GetFileLineNumber();
-
-
-            _thread.Name = $"[{Name}] {namespaceName}\\{declaringType.FullName}\\{methodName}()\\L:{line}";
-            _thread.Start();
-            var approxValue = DateTime.Now.Ticks;
-
-            var process = Process.GetCurrentProcess();
-
-            var accurateList = new List<long>();
-            foreach (ProcessThread t in process.Threads)
+            try
             {
-                accurateList.Add(t.StartTime.Ticks);
-            }
+                StackTrace stackTrace = new StackTrace();
+                StackFrame stackFrame = stackTrace.GetFrame(IsBypass ? 2 : 1);
 
-            long closestValue = accurateList[0];
-            long smallestDifference = Math.Abs(approxValue - accurateList[0]);
+                var method = stackFrame.GetMethod();
+                var declaringType = method.DeclaringType;
+                var methodName = method.Name;
+                var namespaceName = declaringType.Namespace;
+                int line = stackFrame.GetFileLineNumber();
 
-            foreach (var accurateValue in accurateList)
-            {
-                long currentDifference = Math.Abs(approxValue - accurateValue);
 
-                if (currentDifference < smallestDifference)
+                _thread.Name = $"[{Name}] {namespaceName}\\{declaringType.FullName}\\{methodName}()\\L:{line}";
+                _thread.Start();
+                var approxValue = DateTime.Now.Ticks;
+
+                var process = Process.GetCurrentProcess();
+
+                var accurateList = new List<long>();
+                foreach (ProcessThread t in process.Threads)
                 {
-                    smallestDifference = currentDifference;
-                    closestValue = accurateValue;
+                    accurateList.Add(t.StartTime.Ticks);
                 }
-            }
-            var accurateThreadId = 0;
-            foreach (ProcessThread t in process.Threads)
-            {
-                if(closestValue == t.StartTime.Ticks)
-                {
-                    accurateThreadId = t.Id;
-                    break;
-                }
-            }
 
-            Threads.TryAdd(accurateThreadId, _thread);
+                long closestValue = accurateList[0];
+                long smallestDifference = Math.Abs(approxValue - accurateList[0]);
+
+                foreach (var accurateValue in accurateList)
+                {
+                    long currentDifference = Math.Abs(approxValue - accurateValue);
+
+                    if (currentDifference < smallestDifference)
+                    {
+                        smallestDifference = currentDifference;
+                        closestValue = accurateValue;
+                    }
+                }
+                var accurateThreadId = 0;
+                foreach (ProcessThread t in process.Threads)
+                {
+                    if (closestValue == t.StartTime.Ticks)
+                    {
+                        accurateThreadId = t.Id;
+                        break;
+                    }
+                }
+
+                Threads.TryAdd(accurateThreadId, _thread);
+            }
+            catch { }
+
             Thread.Sleep(111);
             return _thread;
         }
