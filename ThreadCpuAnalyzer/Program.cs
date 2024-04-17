@@ -320,11 +320,19 @@ namespace ThreadCpuAnalyzer
                 }
 
                 Threads.TryAdd(accurateThreadId, _thread);
+<<<<<<< HEAD
                 Thread.Sleep(111);
                 return _thread;
             }
             catch { }
             return null;
+=======
+            }
+            catch { }
+
+            Thread.Sleep(111);
+            return _thread;
+>>>>>>> aa376744e7a81096aa0c3622e7cf0e0c23d8ff06
         }
 
         public class ThreadReport
